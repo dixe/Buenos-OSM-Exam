@@ -226,7 +226,7 @@ void process_start(process_id_t pid)
     KERNEL_PANIC("thread_goto_userland failed.");
 }
 
-process_id_t process_spawn(const char *executable)
+process_id_t process_spawn(const char *executable, int deadline)
 {
     TID_t thread;
     process_id_t pid = alloc_process_id();
@@ -238,7 +238,7 @@ process_id_t process_spawn(const char *executable)
     stringcopy(process_table[pid].executable, executable, PROCESS_MAX_FILELENGTH);
     process_table[pid].parent = process_get_current_process();
 
-    thread = thread_create((void (*)(uint32_t))(&process_start), pid);
+    thread = thread_create((void (*)(uint32_t))(&process_start), pid, deadline);
     thread_run(thread);
     return pid;
 }
@@ -280,6 +280,7 @@ int process_join(process_id_t pid)
 
     spinlock_release(&process_table_slock);
     _interrupt_set_state(intr_status);
+
     return retval;
 }
 

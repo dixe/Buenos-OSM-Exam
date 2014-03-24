@@ -272,7 +272,7 @@ void pop_init()
     }
 
     /* start the service thread (the argument is a dummy) */
-    pop_service_thread_id = thread_create(&pop_service_thread, 0);
+    pop_service_thread_id = thread_create(&pop_service_thread, 0, 0);
     thread_run(pop_service_thread_id);
 }
 

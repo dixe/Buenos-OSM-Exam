@@ -133,7 +133,7 @@ void init_startup_thread(uint32_t arg)
 
     kprintf("Starting initial program '%s'\n", bootargs_get("initprog"));
 
-    pid = process_spawn(bootargs_get("initprog"));
+    pid = process_spawn(bootargs_get("initprog"), 0);
     if (pid < 0)
         KERNEL_PANIC("Couldn't fit initial program in process table.\n");
 
@@ -221,7 +221,7 @@ void init(void)
     vm_init();
 
     kprintf("Creating initialization thread\n");
-    startup_thread = thread_create(&init_startup_thread, 0);
+    startup_thread = thread_create(&init_startup_thread, 0, 0);
     thread_run(startup_thread);
 
     kprintf("Starting threading system and SMP\n");

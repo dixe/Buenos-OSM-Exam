@@ -79,26 +79,76 @@ void scheduler_init(void) {
  * @param t thread to add to ready list
  *
  */
-
 void scheduler_add_to_ready_list(TID_t t)
 {
-    /* Idle thread should never go into the ready list */
-    KERNEL_ASSERT(t != IDLE_THREAD_TID);
-
-    /* Sanity check */
-    KERNEL_ASSERT(t >= 0 && t < CONFIG_MAX_THREADS);
-
-    if (scheduler_ready_to_run.tail < 0) {
-	/* ready queue was empty */
-	scheduler_ready_to_run.head = t;
-	scheduler_ready_to_run.tail = t;
-	thread_table[t].next = -1;
-    } else {
-	/* ready queue was not empty */
-	thread_table[scheduler_ready_to_run.tail].next = t;
-	thread_table[t].next = -1;
-	scheduler_ready_to_run.tail = t;
+  /* Idle thread should never go into the ready list */
+  KERNEL_ASSERT(t != IDLE_THREAD_TID);
+  
+  /* Sanity check */
+  KERNEL_ASSERT(t >= 0 && t < CONFIG_MAX_THREADS);
+  
+  // if the list is empy, we can just insert the thread, since it
+  // will be the one with the lowest deadline at head
+  if (scheduler_ready_to_run.tail < 0) {
+    /* ready queue was empty */
+    scheduler_ready_to_run.head = t;
+    scheduler_ready_to_run.tail = t;
+    thread_table[t].next = -1;    
+  }
+  else { // if the list is not empty, we can see  
+    /* ready queue was not empty */
+    // if the head is 0, the we can just insert the new one where we want
+    // we insert at head, to be sure
+    if(thread_table[scheduler_ready_to_run.head].deadline == 0){
+      // set new thread's next to current head
+      thread_table[t].next = scheduler_ready_to_run.head;
+      //set head to new thread
+      scheduler_ready_to_run.head = t;
     }
+    // if we insert a thread with deadline 0, add it to the tail
+    else if(thread_table[t].deadline == 0){
+      thread_table[scheduler_ready_to_run.tail].next = t;
+      thread_table[t].next = -1;
+      scheduler_ready_to_run.tail = t;
+    }
+    else{
+      //if we are here, we know that the head is not 0, we are not 0,
+      //we can test to see if the new threads head is lower
+      TID_t tmp = scheduler_ready_to_run.head;
+      TID_t prev = scheduler_ready_to_run.head; // tmp is either at head, or points to a thread with lower
+						// deadline then the thread we insert
+      int done = 0;
+      if(thread_table[t].deadline < thread_table[tmp].deadline){
+	// if we are here we can insert at head
+	// set new thread's newxt to current head
+	thread_table[t].next = scheduler_ready_to_run.head;
+	//set head to new thread
+	scheduler_ready_to_run.head = t;
+	done = 1;
+      }	
+      tmp = thread_table[tmp].next;
+      while(!done ){
+	// if we are here, we have to move into the list to insert
+	if(tmp == -1){// we are at the tail, and can just insert there
+	  thread_table[scheduler_ready_to_run.tail].next = t;
+	  thread_table[t].next = -1;
+	  scheduler_ready_to_run.tail = t;
+	  done = 1;
+	}
+	else if(thread_table[t].deadline < thread_table[tmp].deadline){
+	  //when here we are ready to insert
+	  //set prev to point at t
+	  thread_table[prev].next = t;
+	  //t should points to tmp
+	  thread_table[t].next = tmp;
+	  done = 1;
+	}
+	//increment for next iteration
+	prev = tmp;
+	tmp = thread_table[tmp].next;
+      }
+    }
+  }
 }
 
 /**
@@ -109,7 +159,7 @@ void scheduler_add_to_ready_list(TID_t t)
  *
  * @return The removed thread.
  *
- * uncommented the old function
+ */
 
 static TID_t scheduler_remove_first_ready(void)
 {
@@ -117,11 +167,11 @@ static TID_t scheduler_remove_first_ready(void)
 
     t = scheduler_ready_to_run.head;
 
-    / ** Idle thread should never be on the ready list. ** /
+    /* Idle thread should never be on the ready list. */
     KERNEL_ASSERT(t != IDLE_THREAD_TID);
 
     if(t >= 0) {
-        / * Threads in ready queue should be in state Ready * /
+        /* Threads in ready queue should be in state Ready */
         KERNEL_ASSERT(thread_table[t].state == THREAD_READY);
 	if(scheduler_ready_to_run.tail == t) {
 	    scheduler_ready_to_run.tail = -1;
@@ -135,77 +185,6 @@ static TID_t scheduler_remove_first_ready(void)
 	return IDLE_THREAD_TID;
     } else {
 	return t;
-    }
-}
-*/
-
-
-/* This function is based on shceduler_remove_first_deadline,
- * but instead of removing first thread ready, it removes the thread with the lowest
- * deadline, which is not 0
- * It is assumed interrupts are disabled and thread table spinlock is held when
- * this function is called.
-*/
-static TID_t shceduler_remove_first_deadline_ready(void)
-{
-    TID_t t;
-    TID_t tmp;
-
-    t = scheduler_ready_to_run.head;
-
-    /* Idle thread should never be on the ready list. */
-    KERNEL_ASSERT(t != IDLE_THREAD_TID);
-
-    if(t >= 0) {
-      tmp = t;
-      while(thread_table[tmp].next != -1){ // if there is still more threads ready
-	
-	// if the next thread has lower dealine, but its deadline is above 0
-	// then it sohuld be the next thread to run
-	if(((thread_table[tmp].deadline < thread_table[t].deadline)  && (thread_table[tmp].deadline != 0)) || (thread_table[t].deadline == 0)){
-	  t = tmp;
-	}	
-
-	tmp = thread_table[tmp].next; // get next thread	
-      }
-
-      //we now have the thread with lowest deadline, if all threads has deadline = 0, we have the first thread
-            
-      /* Threads in ready queue should be in state Ready */
-      KERNEL_ASSERT(thread_table[t].state == THREAD_READY);
-      if(scheduler_ready_to_run.head == t){ // if found t is head, then set head to next
-	scheduler_ready_to_run.head =
-	  thread_table[scheduler_ready_to_run.head].next;
-	
-	// if t == head and t == tail, then set the tial to -1
-	if(scheduler_ready_to_run.tail == t) {
-	  scheduler_ready_to_run.tail = -1;
-	}
-      }
-      else{ // else 
-	tmp = scheduler_ready_to_run.head;
-	int done = 0;
-	while(thread_table[tmp].next != -1 && !done){
-	  if(thread_table[tmp].next == t){// when next is t, we found the one just before t
-	    // set the one that points to t, to the one t points to, i.e. remove t from the list
-	    thread_table[tmp].next = thread_table[t].next;
-    
-	    // if we found the tail, then set it to the one that pointed to t
-	    if(scheduler_ready_to_run.tail == t) {
-	      scheduler_ready_to_run.tail = tmp;
-	    }
-	    done = 1;
-	  }
-	  tmp = thread_table[tmp].next;
-	}
-      }
-      
-    }
-    
-    if(t < 0) {
-      return IDLE_THREAD_TID;
-    } else {
-      return t;
     }
 }
 
@@ -276,10 +255,15 @@ void scheduler_schedule(void)
 	current_thread->state = THREAD_READY;
     }
 
-    // change 
-    t = shceduler_remove_first_deadline_ready();
+    t = scheduler_remove_first_ready();
+
     thread_table[t].state = THREAD_RUNNING;
 
+    /*    if(thread_table[t].deadline != current_thread->deadline){
+      kprintf("Cur deadline is %d\n", current_thread->deadline);
+      kprintf("choosen deadline is %d\n", thread_table[t].deadline);
+    }
+    */
     spinlock_release(&thread_table_slock);
 
     scheduler_current_thread[this_cpu] = t;

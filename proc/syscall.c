@@ -82,12 +82,12 @@ int syscall_read(uint32_t fd, char *s, int len)
 
 int syscall_join(process_id_t pid)
 {
-    return process_join(pid);
+  return process_join(pid);
 }
 
-process_id_t syscall_exec(const char *filename)
+process_id_t syscall_exec(const char *filename, int deadline)
 {
-    return process_spawn(filename);
+  return process_spawn(filename, deadline);
 }
 
 int syscall_open(char *filename)
@@ -191,7 +191,7 @@ void syscall_handle(context_t *user_context)
             break;
         case SYSCALL_EXEC:
             user_context->cpu_regs[MIPS_REGISTER_V0] =
-                syscall_exec((char *)A1);
+	      syscall_exec((char *)A1, A2);
             break;
         case SYSCALL_OPEN:
             user_context->cpu_regs[MIPS_REGISTER_V0] =

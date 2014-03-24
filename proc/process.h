@@ -70,7 +70,7 @@ typedef struct {
 void process_init();
 
 /* Run process in a new thread. Returns the PID of the new process. */
-process_id_t process_spawn(const char *executable);
+process_id_t process_spawn(const char *executable, int deadline);
 
 process_id_t process_get_current_process(void);
 process_table_t *process_get_current_process_entry(void);

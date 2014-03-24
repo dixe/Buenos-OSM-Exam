@@ -162,7 +162,7 @@ static TID_t shceduler_remove_first_deadline_ready(void)
 	
 	// if the next thread has lower dealine, but its deadline is above 0
 	// then it sohuld be the next thread to run
-	if((thread_table[tmp].deadline < thread_table[t].deadline)  && (thread_table[tmp].deadline != 0)){
+	if(((thread_table[tmp].deadline < thread_table[t].deadline)  && (thread_table[tmp].deadline != 0)) || (thread_table[t].deadline == 0)){
 	  t = tmp;
 	}	
 

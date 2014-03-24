@@ -41,6 +41,7 @@
 #include "drivers/polltty.h"
 #include "drivers/yams.h"
 #include "fs/vfs.h"
+#include "fs/pipe.h"
 #include "kernel/assert.h"
 #include "kernel/config.h"
 #include "kernel/halt.h"
@@ -219,6 +220,11 @@ void init(void)
 
     kwrite("Initializing virtual memory\n");
     vm_init();
+    
+    kwrite("Initializing pipe\n");
+    pipe_init();
+
+    
 
     kprintf("Creating initialization thread\n");
     startup_thread = thread_create(&init_startup_thread, 0, 0);

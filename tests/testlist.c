@@ -2,7 +2,7 @@
 
 #define FILESIZE 16
 
-const char *dir = "[halibut]";
+const char *dir = "[pipes]";
 
 int main()
 {

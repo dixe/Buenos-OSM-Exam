@@ -16,7 +16,7 @@
  *    with the distribution.
  * 3. The name of the author may not be used to endorse or promote
  *    products derived from this software without specific prior
- *    written permission.
+ *    writtetn permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -42,6 +42,7 @@
 #include "drivers/device.h"
 #include "fs/tfs.h"
 #include "fs/filesystems.h"
+#include "fs/pipe.h"
 
 /** @name Virtual Filesystem
  *
@@ -792,15 +793,15 @@ int vfs_create(char *pathname, int size)
     }
 
     semaphore_P(vfs_table.sem);
-
+    
     fs = vfs_get_filesystem(volumename);
-
+        
     if(fs == NULL) {
         semaphore_V(vfs_table.sem);
         vfs_end_op();
         return VFS_NO_SUCH_FS;
     }
-
+    
     ret = fs->create(fs, filename, size);
 
     semaphore_V(vfs_table.sem);

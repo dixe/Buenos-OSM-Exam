@@ -7,6 +7,10 @@
 #ifndef FS_PIPE_H
 #define FS_PIPE_H
 
+#define MAX_PIPE_NUMBER 8
+#define PIPE_BUFFER_LEN 256
+#define PIPE_NEGATIVE_SIZE -10
+
 #include "fs/vfs.h"
 #include "lib/libc.h"
 

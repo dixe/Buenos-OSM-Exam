@@ -12,10 +12,23 @@
 #include "fs/pipe.h"
 #include "lib/libc.h"
 
+/*A pipe pseudo file*/
+typedef struct{
+  //name of pipe file
+  char name[VFS_NAME_LENGTH];
+  // buffer to store content of file
+  char buffer[PIPE_BUFFER_LEN];
+  // if 1 the pipe is not in use, if 0 it is
+  int free;
+} pipe_t;
+
+
 /* Data structure for use internally in pipefs. We allocate space for this
  * dynamically during initialization */
 typedef struct {
   semaphore_t *lock;
+  //arry of pipes
+  pipe_t pipes[MAX_PIPE_NUMBER];
   /* Define any data you may need  here. */
 } pipefs_t;
 
@@ -34,6 +47,7 @@ fs_t *pipe_init(void)
     fs_t *fs;
     pipefs_t *pipefs;
     semaphore_t *sem;
+    int i, ret;
 
     /* check semaphore availability before memory allocation */
     sem = semaphore_create(1);
@@ -78,6 +92,22 @@ fs_t *pipe_init(void)
     fs->filecount = pipe_filecount;
     fs->file      = pipe_file;
 
+    ret = vfs_mount(fs, "pipe");
+
+    KERNEL_ASSERT(ret == 0);
+    
+    kprintf("pipe INIT start\n");
+
+    //get semaphore?
+    semaphore_P(pipefs->lock);
+
+    //initialize all pipes in pipefs
+    for(i = 0; i < MAX_PIPE_NUMBER; i++){
+      // initially every pipe is free
+      pipefs->pipes[i].free = 1;
+    }
+    semaphore_V(pipefs->lock);
+
     return fs;
 }
 
@@ -92,8 +122,31 @@ int pipe_unmount(fs_t *fs)
 
 int pipe_open(fs_t *fs, char *filename)
 {
-    fs=fs; filename=filename;
-    return VFS_NOT_SUPPORTED;
+  kprintf("From open filename is %s\n",filename);
+  int i, fid = -1;
+  //get internal pipefs
+  pipefs_t *pipefs = fs->internal;
+  // get the semaphore before reading
+  semaphore_P(pipefs->lock);
+
+  for(i = 0; i< MAX_PIPE_NUMBER; i++){
+    if(pipefs->pipes[i].free){
+      if(!stringcmp(pipefs->pipes[i].name,filename) ){//they are equal
+	fid = i;
+	pipefs->pipes[i].free = 0;
+	break;	
+      }
+    }
+  }
+  //release, since we are done reading now
+  semaphore_V(pipefs->lock);
+  
+  if(fid == -1){// we didn't find the fid
+    return VFS_NOT_FOUND;
+  }
+
+  return fid;
+
 }
 
 int pipe_close(fs_t *fs, int fileid)
@@ -104,8 +157,31 @@ int pipe_close(fs_t *fs, int fileid)
 
 int pipe_create(fs_t *fs, char *filename, int size)
 {
-    fs=fs; filename=filename; size=size;
-    return VFS_NOT_SUPPORTED;
+  kprintf("In create, filename is %s\n", filename);
+  
+  // the size of the file is constant atm
+  size=size;
+   int i;
+  //get internal pipefs
+  pipefs_t *pipefs = fs->internal;
+  //get semaphore for the table
+  semaphore_P(pipefs->lock);
+
+  for(i=0;i< MAX_PIPE_NUMBER; i++){
+    //get the first free pipe
+    if(pipefs->pipes[i].free){
+      //save file name, filename len is the same as VFS
+      stringcopy(pipefs->pipes[i].name, filename, VFS_NAME_LENGTH);
+      kprintf("name is set to %s\n", pipefs->pipes[i].name);
+      break;
+    }
+  }
+  if (i >= MAX_PIPE_NUMBER){
+    return VFS_LIMIT;    
+  }
+
+  semaphore_V(pipefs->lock);
+  return 0;
 }
 
 int pipe_remove(fs_t *fs, char *filename)
@@ -116,14 +192,47 @@ int pipe_remove(fs_t *fs, char *filename)
 
 int pipe_read(fs_t *fs, int fileid, void *buffer, int bufsize, int offset)
 {
-    fs=fs; fileid=fileid; buffer=buffer; bufsize=bufsize; offset=offset;
-    return VFS_NOT_SUPPORTED;
+  int size;
+  //get internal pipefs
+  pipefs_t *pipefs = fs->internal;
+  // get the semaphore before reading
+  semaphore_P(pipefs->lock);
+
+  //get the max size to read
+  size = MIN(bufsize, PIPE_BUFFER_LEN - offset);  
+  if(size <= 0){
+    semaphore_V(pipefs->lock);
+    return PIPE_NEGATIVE_SIZE;
+  }
+  
+  // get the max size between bufsize and 
+  stringcopy(buffer, pipefs->pipes[fileid].buffer + offset,size);  
+
+  //release, since we are done reading now
+  semaphore_V(pipefs->lock);
+  //todo find a way to count bytes read
+  return 0;
 }
 
 int pipe_write(fs_t *fs, int fileid, void *buffer, int datasize, int offset)
 {
-    fs=fs; fileid=fileid; buffer=buffer; datasize=datasize; offset=offset;
-    return VFS_NOT_SUPPORTED;
+  int size;
+  //get internal pipefs
+  pipefs_t *pipefs = fs->internal;
+  // get the semaphore before reading
+  semaphore_P(pipefs->lock);
+  
+  size = MIN(datasize,PIPE_BUFFER_LEN - offset);
+
+  if(size <= 0){
+    semaphore_V(pipefs->lock);
+    return PIPE_NEGATIVE_SIZE;
+  }
+  stringcopy(pipefs->pipes[fileid].buffer + offset, buffer, size);  
+  //release, since we are done reading now
+  semaphore_V(pipefs->lock);
+  //todo find a way to count bytes read
+  return 0;
 }
 
 int pipe_getfree(fs_t *fs)

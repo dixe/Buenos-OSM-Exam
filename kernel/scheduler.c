@@ -173,12 +173,14 @@ static TID_t shceduler_remove_first_deadline_ready(void)
             
       /* Threads in ready queue should be in state Ready */
       KERNEL_ASSERT(thread_table[t].state == THREAD_READY);
-      if(scheduler_ready_to_run.tail == t) {
-	scheduler_ready_to_run.tail = -1;
-      }
       if(scheduler_ready_to_run.head == t){ // if found t is head, then set head to next
 	scheduler_ready_to_run.head =
 	  thread_table[scheduler_ready_to_run.head].next;
+	
+	// if t == head and t == tail, then set the tial to -1
+	if(scheduler_ready_to_run.tail == t) {
+	  scheduler_ready_to_run.tail = -1;
+	}
       }
       else{ // else 
 	tmp = scheduler_ready_to_run.head;
@@ -187,8 +189,15 @@ static TID_t shceduler_remove_first_deadline_ready(void)
 	  if(thread_table[tmp].next == t){// when next is t, we found the one just before t
 	    // set the one that points to t, to the one t points to, i.e. remove t from the list
 	    thread_table[tmp].next = thread_table[t].next;
+    
+	    // if we found the tail, then set it to the one that pointed to t
+	    if(scheduler_ready_to_run.tail == t) {
+	      scheduler_ready_to_run.tail = tmp;
+	    }
+
 	    done = 1;
 	  }	  
+	 
 	}
       }
       

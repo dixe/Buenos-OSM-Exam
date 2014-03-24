@@ -72,6 +72,6 @@ $(TARGETS): %: $(SYSLIBS) %.o
 	$(CC) -o $@  $(CFLAGS) -c $<
 
 clean:
-	rm -f $(SYSLIBS) $(OBJECTS) *.map $(TARGETS) *~
+	rm -f $(SYSLIBS) $(OBJECTS) *.o *.map $(TARGETS) *~
 
 .PHONY: clean

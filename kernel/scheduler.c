@@ -194,10 +194,9 @@ static TID_t shceduler_remove_first_deadline_ready(void)
 	    if(scheduler_ready_to_run.tail == t) {
 	      scheduler_ready_to_run.tail = tmp;
 	    }
-
 	    done = 1;
-	  }	  
-	 
+	  }
+	  tmp = thread_table[tmp].next;
 	}
       }
       

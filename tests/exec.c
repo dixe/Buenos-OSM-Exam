@@ -1,5 +1,6 @@
 /*
  * Userland exec test
+ * Run with one cpu to see the effect
  */
 
 #include "tests/lib.h"

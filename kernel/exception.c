@@ -82,7 +82,7 @@ void kernel_exception_handle(int exception)
     switch(exception) {
     case EXCEPTION_TLBM:
         tlb_modified_exception();
-        break;
+	break;
     case EXCEPTION_TLBL:
         tlb_load_exception();
         break;

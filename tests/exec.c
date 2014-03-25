@@ -9,18 +9,20 @@ static const char prog0[] = "[arkimedes]t0"; /* The program to start. */
 static const char prog1[] = "[arkimedes]t1"; /* The program to start. */
 static const char prog2[] = "[arkimedes]t2"; /* The program to start. */
 static const char prog3[] = "[arkimedes]t3"; /* The program to start. */
+static const char prog4[] = "[arkimedes]t4"; /* The program to start. */
 
 
 
 int main(void)
 {
-  uint32_t child0, child1,child2,child3;
+  uint32_t child0, child1,child2,child3,child4;
   int ret1,ret2;
 
   child0 = syscall_exec(prog0,1000);
   
   child1 = syscall_exec(prog1,2020);
 
+  child4 = syscall_exec(prog4,10);
 
   child2 = syscall_exec(prog2,400);
  
@@ -35,6 +37,10 @@ int main(void)
 
   ret2 = syscall_join(child3);
   printf("Child2 joined with status: %d, child2 joined with %d\n", ret1,ret2);
+
+  ret1 = syscall_join(child4);
+  
+  printf("Child4 joined with status: %d\n", ret1);
  
   syscall_halt();
   return 0;

@@ -7,9 +7,11 @@
 #ifndef FS_PIPE_H
 #define FS_PIPE_H
 
-#define MAX_PIPE_NUMBER 8
+#define MAX_PIPE_NUMBER 12 // choosen to be the highest number still fitting in one page
 #define PIPE_BUFFER_LEN 256
 #define PIPE_NEGATIVE_SIZE -10
+#define PIPE_NO_SEMAPHORE -11
+#define PIPE_REMOVED -12
 
 #include "fs/vfs.h"
 #include "lib/libc.h"

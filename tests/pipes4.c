@@ -1,6 +1,5 @@
 /*
- * simple pipe test, create a pipe, wirte to it and
- * then read from it a new buffer, and echo what was read
+ *Create a pipe open it, wirte to it, delete it and try to read from it
  */
 
 #include "tests/lib.h"
@@ -20,10 +19,10 @@ int main(void)
   ret = syscall_write(fid,buffer,len);
   printf("write ret was %d\n", ret);
   
-  //set the reading position to start of pipe
-  syscall_seek(fid,0);
-  ret = syscall_read(fid, buffer2,len);
-  printf("Buffer2 says %s \n", buffer2);
+  syscall_delete("[pipe]test");  
+
+  ret = syscall_read(fid,buffer2,len);
+  printf("Buffer2 says %s \n",buffer2);
   
   printf("Ret: %d\n",ret);
   return ret;

@@ -1,6 +1,5 @@
 /*
- * simple pipe test, create a pipe, wirte to it and
- * then read from it a new buffer, and echo what was read
+ * try to remove the pipe after a call to write
  */
 
 #include "tests/lib.h"
@@ -28,6 +27,9 @@ int main(void)
   // write again
   syscall_seek(fid,0);
   syscall_write(fid,buffer3,len);
+
+  //try to remove the pipe 
+  syscall_delete("[pipe]test");
 
   // write again
   syscall_seek(fid,0);

@@ -3,12 +3,14 @@
  * the other read from the pipe named test. The reading process
  * should read four different messages, that the write procees
  * writes one at a time
+ * After writing the third time, try to delete the pipe, blocks on read
+ * 
  */
 
 #include "tests/lib.h"
 
-static const char read[] = "[arkimedes]p2read"; /* The program to start. */
-static const char write[] = "[arkimedes]p2write"; /* The program to start. */
+static const char read[] = "[arkimedes]p3read"; /* The program to start. */
+static const char write[] = "[arkimedes]p3write"; /* The program to start. */
 
 int main(void)
 {

@@ -284,6 +284,7 @@ int pipe_remove(fs_t *fs, char *filename)
   pipefs->pipes[pipe].free = 1;
   pipefs->pipes[pipe].removed = 0;
   
+  // destroy semahpores to avoid leaking them if pipe is created again
   semaphore_destroy(pipefs->pipes[pipe].Wlock);
   semaphore_destroy(pipefs->pipes[pipe].Rlock);
 

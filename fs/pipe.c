@@ -320,6 +320,7 @@ int pipe_read(fs_t *fs, int fileid, void *buffer, int bufsize, int offset)
   size = MIN(bufsize, PIPE_BUFFER_LEN - offset);  
   if(size <= 0){
     semaphore_V(pipefs->lock);
+    semaphore_V(pipefs->pipes[fileid].Rlock);
     return PIPE_NEGATIVE_SIZE;
   }
 
@@ -341,6 +342,7 @@ int pipe_write(fs_t *fs, int fileid, void *buffer, int datasize, int offset)
   int size, len;
   //get internal pipefs
   pipefs_t *pipefs = fs->internal;
+  semaphore_P(pipefs->lock);
   if(pipefs->pipes[fileid].removed || pipefs->pipes[fileid].free) {
     //unlock and return error indicating pipe was removed before reading was initiated
     semaphore_V(pipefs->lock);
@@ -348,6 +350,8 @@ int pipe_write(fs_t *fs, int fileid, void *buffer, int datasize, int offset)
   }  
   //if not remove add this as a user of the pipe
   pipefs->pipes[fileid].inuse++;
+  semaphore_V(pipefs->lock);
+
   // get the semaphore before reading
   semaphore_P(pipefs->pipes[fileid].Wlock);
   semaphore_P(pipefs->lock);

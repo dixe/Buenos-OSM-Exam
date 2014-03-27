@@ -20,9 +20,12 @@ typedef struct{
   char name[VFS_NAME_LENGTH];
   // buffer to store content of file
   char buffer[PIPE_BUFFER_LEN];
-  // if 1 the pipe is not in use, if 0 it is
+  // if 1 the pipe free and is not in use, if 0 it is in use
   int free;
+  // if this is 1, the pipe is beeing removed,
+  // and no new read or write can get access to it
   int removed;
+  // indicate users waiting on this pipe
   int inuse;
 } pipe_t;
 
@@ -108,11 +111,10 @@ fs_t *pipe_init(void)
 
     //initialize all pipes in pipefs
     for(i = 0; i < MAX_PIPE_NUMBER; i++){
-      // initially every pipe to free and not removed and not in use
+      // initially every pipe to free and not removed and not in use, and does not use file
       pipefs->pipes[i].free = 1;
       pipefs->pipes[i].removed = 0;
       pipefs->pipes[i].inuse = 0;
-
     }
     semaphore_V(pipefs->lock);
 
@@ -184,15 +186,17 @@ int pipe_close(fs_t *fs, int fileid)
     return VFS_OK;
 }
 
+
+
 int pipe_create(fs_t *fs, char *filename, int size)
 {
-  // the size of the file is constant atm
-  size=size;
-   int i;
+  size = size;
+  int i;
   //get internal pipefs
   pipefs_t *pipefs = fs->internal;
   semaphore_t *semR;
   semaphore_t *semW;
+  
   //get semaphore for the table
   semaphore_P(pipefs->lock);
 
@@ -217,7 +221,6 @@ int pipe_create(fs_t *fs, char *filename, int size)
       pipefs->pipes[i].free = 0;
       pipefs->pipes[i].Rlock = semR;
       pipefs->pipes[i].Wlock = semW;
-
       break;
     }
   }

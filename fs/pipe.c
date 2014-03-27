@@ -338,7 +338,7 @@ int pipe_read(fs_t *fs, int fileid, void *buffer, int bufsize, int offset)
   size = MIN(bufsize, PIPE_BUFFER_LEN - offset);  
   if(size <= 0){
     semaphore_V(pipefs->lock);
-    semaphore_V(pipefs->pipes[fileid].Rlock);
+    semaphore_V(pipefs->pipes[fileid].Wlock);
     return PIPE_NEGATIVE_SIZE;
   }
 

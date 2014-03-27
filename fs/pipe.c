@@ -450,5 +450,5 @@ int pipe_file(fs_t *fs, char *dirname, int idx, char *buffer)
   }
  
   semaphore_V(pipefs->lock);
-  return VFS_NOT_SUPPORTED;
+  return VFS_NOT_FOUND;
 }

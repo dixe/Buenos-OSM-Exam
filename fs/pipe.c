@@ -210,6 +210,7 @@ int pipe_create(fs_t *fs, char *filename, int size)
 
   semW = semaphore_create(1);
   if (semW == NULL) {
+    semaphore_destroy(semR);
     semaphore_V(pipefs->lock);
     return PIPE_NO_SEMAPHORE;
   }

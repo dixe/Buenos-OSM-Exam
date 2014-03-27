@@ -148,7 +148,7 @@ int pipe_unmount(fs_t *fs)
   // free table semahpore
     semaphore_destroy(pipefs->lock);    
 
-    return VFS_NOT_SUPPORTED;
+    return VFS_OK;
 }
 
 int pipe_open(fs_t *fs, char *filename)

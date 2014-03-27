@@ -228,6 +228,8 @@ int pipe_create(fs_t *fs, char *filename, int size)
     }
   }
   if (i >= MAX_PIPE_NUMBER){
+    semaphore_destroy(semR);
+    semaphore_destroy(semW);
     return VFS_LIMIT;    
   }
 

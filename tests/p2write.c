@@ -11,8 +11,8 @@ int main(void)
   int len = 32;  
   char buffer1[32] = "Hello this is first message";
   char buffer2[32] = "Hello second message is up";
-  char buffer3[32] = "Third message comming your way";
-  char buffer4[32] = "Last but not leat, message four";
+  char buffer3[32] = "Third message coming your way";
+  char buffer4[32] = "Last but not least, message four";
 
   fid = syscall_open("[pipe]test");
   //  printf("Fid from read is %d\n", fid);

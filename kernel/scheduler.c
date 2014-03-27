@@ -81,9 +81,7 @@ void scheduler_init(void) {
  */
 void scheduler_add_to_ready_list(TID_t t)
 {
-  /* Idle thread should never go into the ready list */
-  KERNEL_ASSERT(t != IDLE_THREAD_TID);
-  
+
   /* Sanity check */
   KERNEL_ASSERT(t >= 0 && t < CONFIG_MAX_THREADS);
   
@@ -95,25 +93,27 @@ void scheduler_add_to_ready_list(TID_t t)
     scheduler_ready_to_run.tail = t;
     thread_table[t].next = -1;    
   }
-  else { // if the list is not empty, we can see  
+  else { 
     /* ready queue was not empty */
-    // if the head is 0, the we can just insert the new one where we want
-    // we insert at head, to be sure
+    // if the head is 0, the we can just insert the new one thread
+    // where we want, we insert at head to be sure
     if(thread_table[scheduler_ready_to_run.head].deadline == 0){
       // set new thread's next to current head
       thread_table[t].next = scheduler_ready_to_run.head;
       //set head to new thread
       scheduler_ready_to_run.head = t;
     }
-    // if we insert a thread with deadline 0, add it to the tail
+    // if we insert a thread with deadline 0
+    // and head is not 0 add it to the tail
     else if(thread_table[t].deadline == 0){
       thread_table[scheduler_ready_to_run.tail].next = t;
       thread_table[t].next = -1;
       scheduler_ready_to_run.tail = t;
     }
     else{
-      //if we are here, we know that the head is not 0, we are not 0,
-      //we can test to see if the new threads head is lower
+      //if we are here, we know that the head is not 0
+      //and the new thread we are not 0
+      //we test to see if the new threads head is lower
       TID_t tmp = scheduler_ready_to_run.head;
       TID_t prev = scheduler_ready_to_run.head; // tmp is either at head, or points to a thread with lower
 						// deadline then the thread we insert

@@ -437,7 +437,6 @@ int pipe_file(fs_t *fs, char *dirname, int idx, char *buffer)
   pipefs_t *pipefs = fs->internal;
   
   if (stringcmp(dirname, "") != 0 || idx < 0){
-    kprintf("Dirname was not ""\n");
     return VFS_ERROR;
   }
   // get the semaphore

@@ -270,12 +270,6 @@ int pipe_remove(fs_t *fs, char *filename)
   // wait for everyone to finish read/write
   // no new read/write can enter, since it is marked as removed
   while(pipefs->pipes[pipe].inuse){
-    // this means no read or write has been perform, even when opening
-    // up for of each them multiple time, could be unlucky
-    // But might mean there were a read more then write or the other way around.
-    if(runs > PIPE_WAIT_CYCLES){ 
-      break;
-    }
     // use tmp to see if any threads finished a read/write after switching
     int tmp = pipefs->pipes[pipe].inuse;
     // if inuse, unlock the table so other read/write can do there job
@@ -300,7 +294,12 @@ int pipe_remove(fs_t *fs, char *filename)
     else{
       runs = 0;
     }
-    
+    // this means no read or write has been perform, even when opening
+    // up for of each of them multiple time, could be unlucky
+    // But might mean there were a read more then write or the other way around.
+    if(runs > PIPE_WAIT_CYCLES){ 
+      break;
+    }    
   }
   //no one is waiting to read or write, mark as free and not removed
   pipefs->pipes[pipe].free = 1;

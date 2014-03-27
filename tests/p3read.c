@@ -18,7 +18,7 @@ int main(void)
   if(syscall_read(fid,buffer,len) >= 0){
     printf("R1 %s \n",buffer);
   }
-  
+
   //read again
   syscall_seek(fid,0);
   if(syscall_read(fid,buffer,len) >= 0){

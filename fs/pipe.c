@@ -11,6 +11,8 @@
 #include "fs/vfs.h"
 #include "fs/pipe.h"
 #include "lib/libc.h"
+#include "kernel/interrupt.h"
+#include "kernel/sleepq.h"
 
 /*A pipe pseudo file*/
 typedef struct{
@@ -254,13 +256,23 @@ int pipe_remove(fs_t *fs, char *filename)
     semaphore_V(pipefs->lock);
     return VFS_NOT_FOUND;
   }
-  
+  if(pipefs->pipes[i].removed){
+    // already in the process of being removed, return removed error
+    semaphore_V(pipefs->lock);
+    return PIPE_REMOVED;
+  }
   //mark pipe as removed
   pipefs->pipes[pipe].removed = 1;
-
+  int runs = 0;
   // wait for everyone to finish read/write
   // no new read/write can enter, since it is marked as removed
   while(pipefs->pipes[pipe].inuse){
+    // this means no read or write has been perform, even when opening
+    // up for of each them multiple time, could be unlucky
+    // But might mean there were a read more then write or the other way around.
+    if(runs > PIPE_WAIT_CYCLES){ 
+      break;
+    }
     // use tmp to see if any threads finished a read/write after switching
     int tmp = pipefs->pipes[pipe].inuse;
     // if inuse, unlock the table so other read/write can do there job
@@ -273,15 +285,19 @@ int pipe_remove(fs_t *fs, char *filename)
       //Free one write then a read, until all is free
       if(wr){
 	semaphore_V(pipefs->pipes[pipe].Wlock);
+	wr = 0;
+	runs++;
       }
       else{
 	semaphore_V(pipefs->pipes[pipe].Rlock);
+	wr =1;
+	runs++;
       }      
     }
     else{
-      // if we did something, next time we don't, free a write
-      wr = 1;
+      runs = 0;
     }
+    
   }
   //no one is waiting to read or write, mark as free and not removed
   pipefs->pipes[pipe].free = 1;

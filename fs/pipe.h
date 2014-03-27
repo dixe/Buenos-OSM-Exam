@@ -12,6 +12,7 @@
 #define PIPE_NEGATIVE_SIZE -10
 #define PIPE_NO_SEMAPHORE -11
 #define PIPE_REMOVED -12
+#define PIPE_WAIT_CYCLES 100
 
 #include "fs/vfs.h"
 #include "lib/libc.h"
